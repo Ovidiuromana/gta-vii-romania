@@ -1,16 +1,17 @@
 # GTA VII România — 4D Edition
 
-A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired setting includes driveable cars, police pursuits, missions and mobile controls.
+A mobile-friendly Three.js open-world browser prototype with driving, missions and responsive touch controls.
 
-> **Unofficial fan prototype.** Not affiliated with or endorsed by Rockstar Games. “4D Edition” is a title; the game renders a 3D scene.
+> Unofficial fan prototype; not affiliated with Rockstar Games.
 
 ## Play
 
 - Main game: `index.html`.
-- Multi-country expansion: `countries.html` extends the main Three.js world eastward with three fictionalized regions, connecting bridges, border checkpoints, direction signs and distinct scenery. Drive east from the Romanian city along the extended highway to cross into Bulgaria, then continue to Hungary / Central Europe.
-- Race + radio edition: `race-radio.html` adds the timed street race and synthesized radio.
-- Vehicle / police demo: `vehicles.html`; cinematic effects: `immersion.html`; radio wrapper: `radio.html`; service demo: `service.html`.
+- Multi-country traffic and police: `traffic-police.html` adds Dacia 1310-style cars, delivery vans, TIR trucks and taxis with distinct traffic speeds, plus a wanted-star pursuit system with Romanian or Bulgarian police liveries, flashing lights and close-range ramming. The extended eastbound road passes through Romania, Bulgaria and Hungary / Central Europe.
+- Multi-country scenery: `countries.html`.
+- Vehicle physics demo: `physics.html`.
+- Race and radio demo: `race-radio.html`.
 
-Run from the repository directory using `python -m http.server 8080`, then open `http://localhost:8080/countries.html`. The multi-country page fetches `index.html`; use a local HTTP server rather than opening the page directly. Three.js is loaded from cdnjs.
+Serve the repository over HTTP, for example `python -m http.server 8080`, then open `http://localhost:8080/traffic-police.html`. Three.js and the game need internet access to load.
 
-The country environments are original, simplified prototypes—not real-world maps or exact replicas of existing cities.
+The map, police vehicles and traffic are lightweight fictional prototypes, not real-world maps or official representations.

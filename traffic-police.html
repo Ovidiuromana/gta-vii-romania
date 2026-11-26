@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#101827">
+<title>GTA VII România — Multi-Nation Traffic & Police</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101827}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}</style>
+</head>
+<body>
+<iframe id="game" title="GTA VII România — trafic și poliție multi-națiune"></iframe>
+<script>
+(async()=>{
+'use strict';
+const frame=document.getElementById('game');
+function fail(message){document.body.innerHTML='<main style="font:16px system-ui;color:white;background:#101827;padding:24px"><h2>Nu s-a putut încărca extensia de trafic</h2><p></p></main>';document.querySelector('main p').textContent=message;}
+try{
+ const response=await fetch('index.html',{cache:'no-store'});if(!response.ok)throw new Error('Nu s-a putut încărca index.html: '+response.status);
+ let html=await response.text();
+ html=html.replace('const WORLD=360, roads=','const WORLD=1450, roads=');
+ const close='})();';const at=html.lastIndexOf(close);if(at<0)throw new Error('Nu s-a găsit punctul de extensie al jocului.');
+ const patch=String.raw`
+  // Multi-country road network and varied AI traffic / local police extension.
+  const nationHud=document.createElement('div');nationHud.id='nationHud';nationHud.innerHTML='<span id="nationName">ROMÂNIA</span><span id="wantedStars">☆☆☆☆☆</span>';document.body.appendChild(nationHud);
+  const nationStyle=document.createElement('style');nationStyle.textContent='#nationHud{position:fixed;z-index:30;top:max(12px,env(safe-area-inset-top));right:12px;display:grid;gap:4px;text-align:right;padding:8px 11px;background:#07101be8;border:1px solid #ffffff50;border-radius:12px;color:#fff;font:900 11px system-ui;pointer-events:none;text-shadow:0 2px #000}#nationName{color:#93c5fd;letter-spacing:.08em}#wantedStars{color:#ffd447;font-size:19px;letter-spacing:2px}@media(max-width:600px){#nationHud{top:8px;right:8px;padding:6px 8px}#wantedStars{font-size:15px}}';document.head.appendChild(nationStyle);
+  const expansionGround=new THREE.Mesh(new THREE.PlaneGeometry(2300,760),new THREE.MeshStandardMaterial({color:0x788365,roughness:1}));expansionGround.rotation.x=-Math.PI/2;expansionGround.position.set(550,-.16,0);scene.add(expansionGround);
+  const highway=new THREE.Mesh(new THREE.PlaneGeometry(2250,28),new THREE.MeshStandardMaterial({color:0x242a30,roughness:.96}));highway.rotation.x=-Math.PI/2;highway.position.set(550,.025,0);scene.add(highway);
+  const dashMat=new THREE.MeshBasicMaterial({color:0xe9e5d7});for(let x=-480;x<1660;x+=24){const d=new THREE.Mesh(new THREE.PlaneGeometry(9,.3),dashMat);d.rotation.x=-Math.PI/2;d.position.set(x,.05,0);scene.add(d);}
+  const regionGrounds=[{x:650,w:470,color:0xb1a174},{x:1200,w:500,color:0x71826c}];regionGrounds.forEach(r=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(r.w,800),new THREE.MeshStandardMaterial({color:r.color,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(r.x,-.12,0);scene.add(m);});
+  function regionAt(x){return x<430?'România':x<955?'Bulgaria':'Ungaria / Europa Centrală';}
+  function makeSign(x,text){const pole=new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,6,8),new THREE.MeshStandardMaterial({color:0x64717b}));pole.position.set(x,3,-20);scene.add(pole);const c=document.createElement('canvas');c.width=512;c.height=100;const q=c.getContext('2d');q.fillStyle='#14532d';q.fillRect(4,4,504,92);q.strokeStyle='#e2e8f0';q.lineWidth=7;q.strokeRect(4,4,504,92);q.fillStyle='white';q.font='bold 34px system-ui';q.textAlign='center';q.textBaseline='middle';q.fillText(text,256,50);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));s.scale.set(21,4.2,1);s.position.set(x,7,-19);scene.add(s);}
+  makeSign(300,'BULGARIA →');makeSign(815,'UNGARIA / EUROPA CENTRALĂ →');
+  [430,955].forEach((x,i)=>{const bridge=new THREE.Mesh(new THREE.BoxGeometry(90,.32,30),new THREE.MeshStandardMaterial({color:0x69757c}));bridge.position.set(x,.22,0);scene.add(bridge);[-14,14].forEach(z=>{const rail=new THREE.Mesh(new THREE.BoxGeometry(90,1.3,.5),new THREE.MeshStandardMaterial({color:0xc2cbd0}));rail.position.set(x,1.1,z);scene.add(rail);});const booth=new THREE.Mesh(new THREE.BoxGeometry(7,4.5,6),new THREE.MeshStandardMaterial({color:0xe2d9c6}));booth.position.set(x-20,2.4,27);scene.add(booth);});
+  // Vehicle builder: original game controls and player physics stay untouched; traffic follows the cross-country road.
+  const variedTraffic=[];let trafficSerial=0;
+  function createTraffic(kind,x,z,direction,speed){
+    const group=new THREE.Group(),paint={dacia:0xf2eee3,van:0xe7e9e7,tir:0x64748b,taxi:0xe7bd31}[kind]||0xd8d8d8;
+    const body=new THREE.Mesh(new THREE.BoxGeometry(kind==='tir'?2.8:2.25,kind==='van'?1.9:kind==='tir'?1.45:.9,kind==='tir'?4.4:kind==='van'?3.5:4.7),new THREE.MeshStandardMaterial({color:paint,roughness:.48,metalness:.16}));body.position.y=kind==='van'?1.15:.8;body.castShadow=true;group.add(body);
+    if(kind==='tir'){const trailer=new THREE.Mesh(new THREE.BoxGeometry(2.7,2.6,7),new THREE.MeshStandardMaterial({color:trafficSerial%2?0xe5e7eb:0x245b87,roughness:.6}));trailer.position.set(0,1.95,-5.1);trailer.castShadow=true;group.add(trailer);}
+    if(kind==='van'){const cargo=new THREE.Mesh(new THREE.BoxGeometry(2.15,1.5,2.7),new THREE.MeshStandardMaterial({color:paint}));cargo.position.set(0,1.7,-.15);group.add(cargo);}
+    if(kind==='taxi'){const roof=new THREE.Mesh(new THREE.BoxGeometry(.8,.22,.38),new THREE.MeshBasicMaterial({color:0xffe447}));roof.position.set(0,1.38,0);group.add(roof);}
+    const glass=new THREE.Mesh(new THREE.BoxGeometry(1.7,.58,1.9),new THREE.MeshStandardMaterial({color:0x344653,roughness:.2}));glass.position.set(0,1.42,.15);group.add(glass);
+    const wheelGeo=new THREE.CylinderGeometry(.38,.38,.26,10);wheelGeo.rotateZ(Math.PI/2);for(const wx of [-1.12,1.12])for(const wz of [-1.5,1.5]){const wheel=new THREE.Mesh(wheelGeo,new THREE.MeshStandardMaterial({color:0x111318}));wheel.position.set(wx,.4,wz);group.add(wheel);}
+    scene.add(group);const car={kind,x,z,direction,speed,mesh:group,hitCooldown:0};variedTraffic.push(car);trafficSerial++;return car;
+  }
+  const trafficKinds=['dacia','van','tir','taxi'];for(let i=0;i<30;i++){const kind=trafficKinds[i%trafficKinds.length];const x=-300+i*58;const lane=(i%2?1:-1)*5.5;createTraffic(kind,x,lane,i%2?1:-1,(kind==='dacia'?13:kind==='van'?10:kind==='tir'?7:15)+(i%3)*1.5);}
+  // Local police fleet uses country-specific liveries, alternating red/blue roof beacons and pursuit steering.
+  const policeUnits=[];let wanted=0,wantedCooldown=0,lastPlayerPos={x:state.x,z:state.z};
+  function wantedUI(){document.getElementById('wantedStars').textContent='★'.repeat(wanted)+'☆'.repeat(5-wanted);}
+  function createPolice(){const zone=regionAt(state.x),bg=new THREE.Group(),body=new THREE.Mesh(new THREE.BoxGeometry(2.35,.95,4.9),new THREE.MeshStandardMaterial({color:0xf3f4f6,roughness:.42}));body.position.y=.85;body.castShadow=true;bg.add(body);const stripe=new THREE.Mesh(new THREE.BoxGeometry(2.38,.26,2.8),new THREE.MeshStandardMaterial({color:zone==='Bulgaria'?0x1648a0:0x1767ad}));stripe.position.set(0,.9,-.15);bg.add(stripe);const cabin=new THREE.Mesh(new THREE.BoxGeometry(1.8,.72,2.1),new THREE.MeshStandardMaterial({color:0x263947,roughness:.2}));cabin.position.set(0,1.48,-.1);bg.add(cabin);const red=new THREE.Mesh(new THREE.BoxGeometry(.56,.2,.26),new THREE.MeshBasicMaterial({color:0xff2020})),blue=new THREE.Mesh(new THREE.BoxGeometry(.56,.2,.26),new THREE.MeshBasicMaterial({color:0x225dff}));red.position.set(-.37,1.98,-.1);blue.position.set(.37,1.98,-.1);bg.add(red,blue);const badge=new THREE.Mesh(new THREE.BoxGeometry(.8,.12,.16),new THREE.MeshBasicMaterial({color:0xffffff}));badge.position.set(0,1.85,2.48);bg.add(badge);const angle=Math.random()*Math.PI*2;const unit={mesh:bg,x:state.x+Math.cos(angle)*48,z:state.z+Math.sin(angle)*48,yaw:Math.atan2(-Math.cos(angle),-Math.sin(angle)),red,blue,zone};bg.position.set(unit.x,0,unit.z);scene.add(bg);policeUnits.push(unit);toast(zone==='Bulgaria'?'🚔 Българска полиция is pursuing!':'🚔 Poliția Română este pe urmele tale!');}
+  function raiseWanted(reason){if(wanted>=5||wantedCooldown>0)return;wanted++;wantedCooldown=240;wantedUI();createPolice();if(typeof toast==='function')toast('🚨 '+reason+' · '+wanted+'★');}
+  function syncWantedFleet(){while(policeUnits.length<wanted){const zone=regionAt(state.x);const uBefore=policeUnits.length;createPolice();if(policeUnits.length===uBefore)break;}while(policeUnits.length>wanted){const u=policeUnits.pop();scene.remove(u.mesh);}}
+  function pursuitAndTrafficUpdate(){
+    if(wantedCooldown>0)wantedCooldown--;
+    const dx=state.x-lastPlayerPos.x,dz=state.z-lastPlayerPos.z,playerSpeed=Math.hypot(dx,dz);lastPlayerPos={x:state.x,z:state.z};
+    const currentZone=regionAt(state.x);document.getElementById('nationName').textContent=currentZone.toUpperCase();
+    // Speeding is sampled from player displacement; traffic impacts add a separate wanted event.
+    if(state.mode==='playing'&&state.car&&playerSpeed>.92)raiseWanted(currentZone==='Bulgaria'?'Скорост превишена':'Viteză excesivă');
+    variedTraffic.forEach(car=>{car.x+=car.direction*car.speed/60; if(car.x>1630)car.x=-360;if(car.x<-360)car.x=1630;car.mesh.position.set(car.x,0,car.z);car.mesh.rotation.y=car.direction>0?Math.PI/2:-Math.PI/2;if(car.hitCooldown>0)car.hitCooldown--;if(state.car&&car.hitCooldown===0&&Math.hypot(state.x-car.x,state.z-car.z)<4.2&&playerSpeed>.45){car.hitCooldown=180;raiseWanted(currentZone==='Bulgaria'?'удар в трафик':'Coliziune cu traficul');}});
+    policeUnits.forEach((unit,index)=>{const desired=Math.atan2(state.x-unit.x,state.z-unit.z);let diff=desired-unit.yaw;while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;unit.yaw+=diff*.065;const chaseSpeed=.42+Math.min(wanted,5)*.09;unit.x+=Math.sin(unit.yaw)*chaseSpeed;unit.z+=Math.cos(unit.yaw)*chaseSpeed;unit.mesh.position.set(unit.x,.02,unit.z);unit.mesh.rotation.y=unit.yaw;const blink=(Math.floor(performance.now()/160)+index)%2===0;unit.red.material.color.setHex(blink?0xff2020:0x4b0808);unit.blue.material.color.setHex(blink?0x173b99:0x2868ff);
+      if(state.mode==='playing'&&Math.hypot(state.x-unit.x,state.z-unit.z)<4.4){const bumpX=Math.sin(unit.yaw)*.16,bumpZ=Math.cos(unit.yaw)*.16;if(state.car){state.car.x+=bumpX;state.car.z+=bumpZ;state.car.speed=(state.car.speed||0)*.7;}state.x+=bumpX;state.z+=bumpZ;}
+    });
+    if(wanted>0&&state.mode==='playing'&&playerSpeed<.12&&Math.random()<.0007){wanted--;wantedUI();if(wanted===0){policeUnits.forEach(u=>scene.remove(u.mesh));policeUnits.length=0;toast('Ai scăpat de poliție!');}else syncWantedFleet();}
+  }
+  const baseUpdate=update;update=function(){baseUpdate();if(state.mode==='playing')pursuitAndTrafficUpdate();};
+  wantedUI();
+`;
+ html=html.slice(0,at)+patch+'\n'+html.slice(at);
+ frame.srcdoc=html;
+}catch(error){fail(String(error.message||error));}
+})();
+</script>
+</body>
+</html>
