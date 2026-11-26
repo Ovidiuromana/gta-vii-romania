@@ -1,4 +1,4 @@
-# GTA VII România — 4D Edition
+# GTA VII România 4D Edition
 
 A mobile-friendly Three.js open-world browser prototype with driving, missions and responsive touch controls.
 
