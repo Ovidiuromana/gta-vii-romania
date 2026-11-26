@@ -1,27 +1,23 @@
 # GTA VII România — 4D Edition
 
-A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired city includes driveable cars, police pursuits, a street race, a minimap, synthesized radio and mobile controls.
+A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired city includes walkable streets, driveable cars, police pursuits, missions and mobile controls.
 
 > **Unofficial fan prototype.** Not affiliated with or endorsed by Rockstar Games. “4D Edition” is a title; the game renders a 3D scene.
 
 ## Play
 
-- Main prototype: open `index.html`.
-- Atmosphere preview: open `immersion.html` for a cinematic accelerated day/night color grade and motion effects.
-- Vehicle, police and street-race prototype: open `vehicles.html` for wanted stars, police pursuit, six timed checkpoints and a $2,500 race reward.
-- Service Auto preview: open `service.html` to play the same vehicle/race prototype with a glowing blue garage marker. Driving into it costs $500, repairs the car and clears active wanted stars; it requires damage or an active wanted level.
-- Synth radio edition: open `radio.html` for three original Web Audio stations: RADIO OFF, HORĂ MOLDOVENEASCĂ FM and TRAP ROMÂNIA FM. No external music files are used. Start playback with the radio button; browsers require a user gesture to enable audio.
+- Main game: `index.html`.
+- Race + radio edition: `race-radio.html` layers the timed 6-checkpoint street race and three synthesized radio stations over the main game without replacing its existing visuals, simulation or touch controls. Start the race by driving into the glowing green marker near the starting cars. Finish in 45 seconds for **+2,500 RON**.
+- Other demos: `vehicles.html`, `immersion.html`, `radio.html` and `service.html`.
 
-Three.js is loaded from cdnjs, so an internet connection is needed. Serve the repository over HTTP (the previews use `fetch`), for example with `python -m http.server 8080`, then visit `http://localhost:8080/service.html`.
+Run from the repository directory with `python -m http.server 8080`, then open `http://localhost:8080/race-radio.html`. The race edition fetches `index.html`, so use a local web server rather than opening the file directly. Three.js is loaded from cdnjs and needs an internet connection.
 
 ## Features
 
-- Procedural Romanian-inspired city streets, apartment blocks and roundabout with tricolor flag
-- Driveable sports sedan, ambient traffic, wanted stars and chasing police vehicles
-- Timed street race with glowing checkpoints, directional arrow and cash reward
-- Circular radar minimap with police and race checkpoint blips
-- Service Auto marker with cash-gated repair and wanted-level clearing
-- Mobile driving controls: steering, gas, brake, drift and horn
-- Original synthesized radio melodies/rhythms via Web Audio API; no commercial music assets
+- Original Three.js city scene, third-person gameplay and mobile controls
+- Glowing race-start marker; 45-second race with six sequential 3D checkpoints and a floating direction arrow
+- +2,500 RON reward, HUD countdown and celebratory success banner/sound
+- Radio cycle: RADIO OFF, HORĂ MOLDOVENEASCĂ FM, TRAP ROMÂNIA FM
+- Synthesized Web Audio folk-inspired melody and trap-style bass rhythm; no MP3 assets
 
-The environment and music are fictional/original prototypes. Graphics, vehicle handling and AI are lightweight demos, not a production-scale AAA simulation.
+All locations and music are fictional prototypes. This is not a production-scale AAA game.

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <title>GTA VII România — Race & Radio Edition</title>
+  <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101827}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}</style>
+</head>
+<body>
+  <iframe id="game" title="GTA VII România — cursă și radio"></iframe>
+<script>
+(async () => {
+  'use strict';
+  const frame = document.getElementById('game');
+  const fail = message => {
+    document.body.innerHTML = '<main style="font:16px system-ui;color:white;background:#101827;padding:24px"><h2>Nu s-a putut încărca jocul</h2><p></p></main>';
+    document.querySelector('main p').textContent = message;
+  };
+  try {
+    const response = await fetch('index.html', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Nu s-a putut prelua index.html (' + response.status + ').');
+    let html = await response.text();
+    const style = `<style>
+      #streetRaceHud{position:absolute;left:50%;top:12px;transform:translateX(-50%);display:none;z-index:25;pointer-events:none;text-align:center;padding:8px 13px;border:1px solid #ffd447;border-radius:12px;background:#07101be8;box-shadow:0 5px 20px #0008;min-width:210px}
+      #streetRaceHud strong{color:#ffd447;font-size:12px}#streetRaceTimer{margin-left:10px;font-weight:1000;font-size:20px}#streetRaceInfo{display:block;color:#e2e8f0;font-size:10px;margin-top:3px}
+      #streetRaceWin{position:fixed;z-index:80;left:50%;top:40%;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;text-align:center;padding:16px 24px;border:2px solid #4ade80;border-radius:16px;background:#052e16ed;color:#bbf7d0;font-size:clamp(24px,6vw,42px);font-weight:1000;text-shadow:0 0 18px #4ade80;transition:all .28s}
+      #streetRaceWin.show{opacity:1;transform:translate(-50%,-50%) scale(1)}#streetRaceWin small{display:block;font-size:16px;margin-top:4px}
+      @media(max-width:600px){#streetRaceHud{top:8px;min-width:170px;padding:6px 9px}}
+    </style>`;
+    html = html.replace('</head>', style + '</head>');
+
+    const hudAnchor = '    <div id="toast">Salut!</div>';
+    if (!html.includes(hudAnchor)) throw new Error('Jocul a fost modificat și marcatorul HUD nu a fost găsit.');
+    html = html.replace(hudAnchor, hudAnchor + `
+    <div id="streetRaceHud"><strong>CURSĂ STRADALĂ</strong><span id="streetRaceTimer">45</span><span id="streetRaceInfo">Checkpoint 1 / 6 · Urmează săgeata</span></div>
+    <div id="streetRaceWin">MISIUNE REUȘITĂ!<small>+2.500 RON</small></div>`);
+
+    const sceneAnchor = '            let activeDestMesh = null;';
+    const scenePatch = `
+            // Optional street-race mode layered into the original open-world game.
+            const streetRace = { active: false, timeLeft: 45, index: 0, checkpoints: [], marker: null, label: null, arrow: null, winTimer: null };
+            const racePoints = [{x:-120,z:-6},{x:-120,z:-120},{x:0,z:-120},{x:120,z:-120},{x:120,z:0},{x:18,z:0}];
+            streetRace.marker = new THREE.Mesh(new THREE.CylinderGeometry(4.5,4.5,.4,28),new THREE.MeshStandardMaterial({color:0x22e66b,emissive:0x078a35,emissiveIntensity:1.4,transparent:true,opacity:.9}));
+            streetRace.marker.position.set(-30,.32,-15); scene.add(streetRace.marker);
+            streetRace.label = (() => { const c=document.createElement('canvas');c.width=512;c.height=96;const x=c.getContext('2d');x.font='bold 34px system-ui';x.textAlign='center';x.textBaseline='middle';x.lineWidth=7;x.strokeStyle='#07101b';x.strokeText('CURSĂ STRADALĂ (2.500 RON)',256,48);x.fillStyle='#9cffb1';x.fillText('CURSĂ STRADALĂ (2.500 RON)',256,48);const t=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));s.scale.set(18,3.4,1);s.position.set(-30,6,-15);scene.add(s);return s; })();
+            streetRace.arrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,4,0),7,0xffd447,2,1.2);streetRace.arrow.visible=false;scene.add(streetRace.arrow);
+            function clearStreetRace(){streetRace.checkpoints.forEach(cp=>{scene.remove(cp.ring,cp.beacon);cp.ring.geometry.dispose();cp.ring.material.dispose();cp.beacon.geometry.dispose();cp.beacon.material.dispose();});streetRace.checkpoints=[];streetRace.active=false;streetRace.arrow.visible=false;document.getElementById('streetRaceHud').style.display='none';streetRace.marker.visible=true;streetRace.label.visible=true;}
+            function beginStreetRace(){if(streetRace.active)return;streetRace.active=true;streetRace.timeLeft=45;streetRace.index=0;streetRace.checkpoints=racePoints.map((p,i)=>{const color=i%2?0xff3d3d:0xffd447;const ring=new THREE.Mesh(new THREE.TorusGeometry(5,.42,10,32),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.75}));ring.rotation.x=Math.PI/2;ring.position.set(p.x,1.5,p.z);scene.add(ring);const beacon=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,7,10),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.22}));beacon.position.set(p.x,4.5,p.z);scene.add(beacon);return {...p,ring,beacon};});streetRace.marker.visible=false;streetRace.label.visible=false;document.getElementById('streetRaceHud').style.display='block';showToast('🏁 Cursa a început! Urmează cele 6 checkpoint-uri.','#22c55e');}
+            function updateStreetRace(){if(!streetRace.active){streetRace.marker.rotation.y+=.018;streetRace.marker.material.emissiveIntensity=1.05+Math.sin(game.tick*.09)*.55;streetRace.label.position.y=5.8+Math.sin(game.tick*.07)*.28;if(playerState.inCar&&Math.hypot(playerState.x-streetRace.marker.position.x,playerState.z-streetRace.marker.position.z)<7)beginStreetRace();return;}
+              streetRace.timeLeft=Math.max(0,streetRace.timeLeft-1/60);const timer=document.getElementById('streetRaceTimer'),info=document.getElementById('streetRaceInfo');timer.textContent=Math.ceil(streetRace.timeLeft);info.textContent='Checkpoint '+(streetRace.index+1)+' / 6 · Urmează săgeata';
+              streetRace.checkpoints.forEach((cp,i)=>{cp.ring.rotation.z+=.012;if(i===streetRace.index){cp.ring.material.emissiveIntensity=1.25+Math.sin(game.tick*.12)*.7;cp.beacon.material.opacity=.2+Math.sin(game.tick*.1)*.12;}});
+              const cp=streetRace.checkpoints[streetRace.index];if(cp&&Math.hypot(playerState.x-cp.x,playerState.z-cp.z)<8){AudioEngine.beep(660,'sine',.12,.05);streetRace.index++;if(streetRace.index>=streetRace.checkpoints.length){game.money+=2500;AudioEngine.sfxCash();[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>AudioEngine.beep(f,'sine',.24,.06),i*130));clearStreetRace();const banner=document.getElementById('streetRaceWin');banner.classList.add('show');setTimeout(()=>banner.classList.remove('show'),3200);showToast('🏆 MISIUNE REUȘITĂ! +2.500 RON','#22c55e');}}
+              if(streetRace.active&&streetRace.timeLeft<=0){clearStreetRace();showToast('⏱️ Timp expirat. Încearcă din nou!','#ef4444');}
+              if(streetRace.active){const next=streetRace.checkpoints[streetRace.index];if(next){streetRace.arrow.visible=true;streetRace.arrow.position.set(playerState.x,4.5,playerState.z);streetRace.arrow.setDirection(new THREE.Vector3(next.x-playerState.x,0,next.z-playerState.z).normalize());}else streetRace.arrow.visible=false;}
+            }
+            // Generated radio loops: no external music files; playback begins after a radio-button gesture.
+            const synthStations=[{name:'RADIO OFF',notes:[],tempo:0},{name:'HORĂ MOLDOVENEASCĂ FM',notes:[587.33,659.25,783.99,880,783.99,659.25,587.33,523.25],tempo:154},{name:'TRAP ROMÂNIA FM',notes:[55,55,73.42,55,49,49,65.41,55],tempo:140}];let synthRadioIdx=0,synthRadioStep=0,synthRadioTimer=null;
+            function cycleSynthRadio(){synthRadioIdx=(synthRadioIdx+1)%synthStations.length;const station=synthStations[synthRadioIdx];document.getElementById('radioNameHud').textContent=station.name;AudioEngine.unlock();if(synthRadioTimer){clearInterval(synthRadioTimer);synthRadioTimer=null;}if(AudioEngine.radioTimer){clearInterval(AudioEngine.radioTimer);AudioEngine.radioTimer=null;}synthRadioStep=0;if(station.tempo){const interval=60000/station.tempo/2;synthRadioTimer=setInterval(()=>{if(game.mode!=='playing')return;const i=synthRadioStep++%station.notes.length;const f=station.notes[i];if(synthRadioIdx===1){AudioEngine.beep(f,'triangle',.17,.045);if(i%2===0)AudioEngine.beep(f/2,'sine',.18,.035);}else{if(i%4===0)AudioEngine.beep(48,'sine',.2,.09);if(i%4===2)AudioEngine.beep(180,'square',.07,.025);AudioEngine.beep(f,'sine',.19,.08);if(i%2===1)AudioEngine.beep(8000,'square',.04,.012);}},interval);}showToast('📻 '+station.name,'#38bdf8');}
+            document.getElementById('btnRadioHud').addEventListener('click',e=>{e.stopImmediatePropagation();cycleSynthRadio();},true);
+            window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='r'&&game.mode==='playing'){e.preventDefault();e.stopImmediatePropagation();cycleSynthRadio();}},true);
+`;
+    if (!html.includes(sceneAnchor)) throw new Error('Jocul a fost modificat și punctul de inserare a cursei nu a fost găsit.');
+    html = html.replace(sceneAnchor, sceneAnchor + scenePatch);
+
+    const updateAnchor = '                updateHUD();\n            }\n\n            function startMission3D(m)';
+    if (!html.includes(updateAnchor)) throw new Error('Jocul a fost modificat și bucla simulării nu a fost găsită.');
+    html = html.replace(updateAnchor, '                updateStreetRace();\n                updateHUD();\n            }\n\n            function startMission3D(m)');
+    frame.srcdoc = html;
+  } catch (error) {
+    fail(String(error.message || error));
+  }
+})();
+</script>
+</body>
+</html>
