@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <title>GTA VII România — Synth Radio Edition</title>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101827}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}
+  </style>
+</head>
+<body>
+  <!-- Keep the original Three.js game intact; this same-origin wrapper enhances its radio controls/audio. -->
+  <iframe id="game" src="vehicles.html" title="GTA VII România — prototip cu radio sintetizat"></iframe>
+<script>
+(() => {
+  'use strict';
+  const frame = document.getElementById('game');
+  const labels = ['📻 RADIO OFF', '📻 HORĂ MOLDOVENEASCĂ FM', '📻 TRAP ROMÂNIA FM'];
+  let child, radioButton, station = 0, audio = null, master = null, loop = null, step = 0, bound = false;
+
+  function ensureAudio() {
+    try {
+      if (!audio) {
+        const AudioContext = child.AudioContext || child.webkitAudioContext;
+        if (!AudioContext) return false;
+        audio = new AudioContext();
+        master = audio.createGain();
+        master.gain.value = 0.0001;
+        const compressor = audio.createDynamicsCompressor();
+        compressor.threshold.value = -18;
+        compressor.knee.value = 12;
+        compressor.ratio.value = 5;
+        master.connect(compressor);
+        compressor.connect(audio.destination);
+      }
+      if (audio.state === 'suspended') audio.resume();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function envelope(gain, start, peak, end, attack, duration) {
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), start + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  }
+
+  function note(frequency, duration, waveform, volume, when, endFrequency) {
+    if (!audio || !master || audio.state !== 'running') return;
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    const start = Math.max(audio.currentTime + 0.005, when || audio.currentTime);
+    osc.type = waveform;
+    osc.frequency.setValueAtTime(Math.max(20, frequency), start);
+    if (endFrequency && endFrequency !== frequency) {
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), start + duration);
+    }
+    envelope(gain, start, volume, 0.0001, Math.min(0.025, duration * 0.12), duration);
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(start);
+    osc.stop(start + duration + 0.025);
+  }
+
+  function kick(when) {
+    note(145, 0.24, 'sine', 0.22, when, 43);
+  }
+
+  function snare(when) {
+    if (!audio || !master || audio.state !== 'running') return;
+    const length = Math.floor(audio.sampleRate * 0.12);
+    const buffer = audio.createBuffer(1, length, audio.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    const source = audio.createBufferSource();
+    const filter = audio.createBiquadFilter();
+    const gain = audio.createGain();
+    const start = Math.max(audio.currentTime + 0.005, when || audio.currentTime);
+    source.buffer = buffer;
+    filter.type = 'highpass';
+    filter.frequency.value = 1300;
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.11, start + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(master);
+    source.start(start);
+    source.stop(start + 0.13);
+  }
+
+  function hat(when, open = false) {
+    if (!audio || !master || audio.state !== 'running') return;
+    const length = Math.floor(audio.sampleRate * (open ? 0.085 : 0.045));
+    const buffer = audio.createBuffer(1, length, audio.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+    const source = audio.createBufferSource();
+    const filter = audio.createBiquadFilter();
+    const gain = audio.createGain();
+    const start = Math.max(audio.currentTime + 0.005, when || audio.currentTime);
+    source.buffer = buffer;
+    filter.type = 'highpass';
+    filter.frequency.value = open ? 6500 : 8500;
+    gain.gain.setValueAtTime(open ? 0.0001 : 0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(open ? 0.055 : 0.035, start + 0.003);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + (open ? 0.08 : 0.04));
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(master);
+    source.start(start);
+    source.stop(start + (open ? 0.09 : 0.05));
+  }
+
+  const folkMelody = [587.33, 659.25, 783.99, 880, 783.99, 659.25, 587.33, 523.25,
+    587.33, 783.99, 880, 1046.5, 880, 783.99, 659.25, 587.33];
+  const folkBass = [146.83, 146.83, 196, 196, 130.81, 130.81, 196, 196];
+  const trapBass = [55, 55, 55, 73.42, 49, 49, 65.41, 55, 55, 55, 82.41, 73.42, 49, 49, 55, 65.41];
+  const trapLead = [220, 0, 261.63, 0, 196, 0, 293.66, 0, 220, 0, 329.63, 0, 196, 0, 261.63, 0];
+
+  function playStep() {
+    if (station === 0 || !audio || audio.state !== 'running') return;
+    const now = audio.currentTime + 0.018;
+    if (station === 1) {
+      const i = step % folkMelody.length;
+      // Original, synthesized folk-inspired melody and a quick oom-pah dance pulse.
+      note(folkMelody[i], 0.17, 'triangle', 0.075, now);
+      note(folkMelody[i] * 2, 0.11, 'sine', 0.018, now + 0.012);
+      if (i % 2 === 0) {
+        const bass = folkBass[(i >> 1) % folkBass.length];
+        note(bass, 0.19, 'triangle', 0.065, now);
+        note(bass * 1.5, 0.09, 'sine', 0.024, now + 0.2);
+      }
+      if (i % 4 === 2) hat(now, false);
+      step++;
+      return;
+    }
+    // Trap-style 808 sub, kick/snare backbeat, and crisp generated hi-hats.
+    const i = step % 16;
+    if (i === 0 || i === 6 || i === 10) kick(now);
+    if (i === 4 || i === 12) snare(now);
+    hat(now, i === 7 || i === 15);
+    const bass = trapBass[i];
+    note(bass, i === 2 || i === 11 ? 0.31 : 0.19, 'sine', 0.16, now,
+      i === 2 || i === 11 ? bass * 1.45 : bass);
+    if (trapLead[i]) note(trapLead[i], 0.1, 'square', 0.018, now + 0.008);
+    step++;
+  }
+
+  function stopLoop() {
+    if (loop !== null) child.clearInterval(loop);
+    loop = null;
+    if (master && audio) {
+      const now = audio.currentTime;
+      master.gain.cancelScheduledValues(now);
+      master.gain.setTargetAtTime(0.0001, now, 0.035);
+    }
+  }
+
+  function setStation(next) {
+    station = (next + labels.length) % labels.length;
+    if (radioButton) radioButton.textContent = labels[station];
+    stopLoop();
+    if (station === 0) return;
+    if (!ensureAudio()) {
+      station = 0;
+      if (radioButton) radioButton.textContent = labels[station];
+      return;
+    }
+    const now = audio.currentTime;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setTargetAtTime(0.72, now, 0.08);
+    step = 0;
+    const interval = station === 1 ? (60000 / 154 / 2) : (60000 / 140 / 4);
+    playStep();
+    loop = child.setInterval(playStep, interval);
+  }
+
+  function bindGame() {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.getElementById('radio')) return false;
+      const win = frame.contentWindow;
+      radioButton = doc.getElementById('radio');
+      radioButton.textContent = labels[station];
+      if (bound) return true;
+      bound = true;
+      // Capture before the prototype's own click handler so its simple demo tone is replaced.
+      radioButton.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setStation(station + 1);
+      }, true);
+      // Replace the prototype's R-key radio shortcut too.
+      win.addEventListener('keydown', event => {
+        if (event.key.toLowerCase() === 'r') {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          setStation(station + 1);
+        }
+      }, true);
+      doc.addEventListener('visibilitychange', () => {
+        if (doc.hidden && loop !== null) {
+          child.clearInterval(loop);
+          loop = null;
+        } else if (!doc.hidden && station !== 0 && loop === null) {
+          const interval = station === 1 ? (60000 / 154 / 2) : (60000 / 140 / 4);
+          loop = child.setInterval(playStep, interval);
+        }
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  frame.addEventListener('load', bindGame);
+  const retry = setInterval(() => { if (bindGame()) clearInterval(retry); }, 250);
+})();
+</script>
+</body>
+</html>

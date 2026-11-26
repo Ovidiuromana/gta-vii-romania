@@ -1,37 +1,26 @@
 # GTA VII România — 4D Edition
 
-A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired city includes walkable streets, driveable cars, a minimap, mission markers, synthesized radio motifs and local saves.
+A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired city includes driveable cars, police pursuits, a street race, a minimap, synthesized radio and mobile controls.
 
 > **Unofficial fan prototype.** Not affiliated with or endorsed by Rockstar Games. “4D Edition” is a title; the game renders a 3D scene.
 
 ## Play
 
-- Main prototype: open `index.html` in a modern WebGL-enabled browser.
-- Atmosphere preview: open `immersion.html` for a cinematic accelerated day/night color grade, night ambience, headlights overlay and motion effects. It embeds the main prototype.
-- Vehicle and police prototype: open `vehicles.html` for a black sports sedan, synthesized engine and horn sounds, ambient classic-car traffic, a 1–5 star wanted system, speeding detection, and pursuing Romanian-style police cars with flashing sirens.
-- Three.js is loaded from cdnjs, so an internet connection is required. You can run a local server with `python -m http.server 8000`, then visit `http://localhost:8000`.
+- Main prototype: open `index.html`.
+- Atmosphere preview: open `immersion.html` for a cinematic accelerated day/night color grade and motion effects.
+- Vehicle, police and street-race prototype: open `vehicles.html` for wanted stars, police pursuit, six timed checkpoints and a $2,500 race reward.
+- Synth radio edition: open `radio.html`. It embeds the existing vehicle/race game and overrides the radio button / **R** key with three original Web Audio stations: **RADIO OFF**, **HORĂ MOLDOVENEASCĂ FM** (fast folk-inspired melody and dance pulse), and **TRAP ROMÂNIA FM** (synthesized 808-style bass, kick, snare and hi-hat rhythm). No external music files are used. Start playback with the radio button; browsers require a user gesture to enable audio.
 
-## Prototype features
+Three.js is loaded from cdnjs, so an internet connection is needed. You can run a local server with `python -m http.server 8080`, then visit `http://localhost:8080/radio.html`.
 
-- Procedural city blocks, roads, central roundabout and Romanian tricolor landmark
-- Third-person on-foot movement, sprint, jump and camera orbit in the main prototype
-- Driveable parked cars and simple ambient traffic
-- Timed destination missions with RON rewards
-- Gas station, repair point, minimap and mobile touch controls
-- Keyboard/mouse support, synthesized radio motifs and local `localStorage` saves
-- Vehicle prototype with a sports sedan, lights, synthesized audio, traffic collisions, wanted stars and police pursuit
-- Responsive HUD and WebGL fallback messaging
+## Features
 
-## Controls
+- Procedural Romanian-inspired city streets, apartment blocks and roundabout with tricolor flag
+- Driveable sports sedan, ambient traffic, wanted stars and chasing police vehicles
+- Timed street race with glowing checkpoints, directional arrow and cash reward
+- Circular radar minimap with police and race checkpoint blips
+- Mobile driving controls: steering, gas, brake, drift and horn
+- Original synthesized radio melodies/rhythms via Web Audio API; no commercial music assets
+- Responsive browser layout and local prototypes
 
-| Action | Desktop | Mobile |
-|---|---|---|
-| Move / steer | WASD or arrow keys | Left virtual joystick (main prototype) |
-| Enter / exit car | F or E | INTRĂ / IEȘI |
-| Jump / nitro | Space | SALT / NITRO |
-| Sprint | Shift | Hold action while on foot |
-| Rotate camera | Q or drag | Drag the 3D scene |
-| Radio / pause | R / Esc or M | HUD buttons |
-| Vehicle prototype | WASD/arrows, Space horn, Shift drift | On-screen steering, gas, reverse and horn |
-
-The city is fictional and inspired by Romanian settings; it is not a real-world map. Graphics, traffic, and effects are lightweight prototype features, not a production-scale AAA simulation.
+The environment and music are fictional/original prototypes. Graphics, vehicle handling and AI are lightweight demos, not a production-scale AAA simulation.
