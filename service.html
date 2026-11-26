@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <title>GTA VII România — Service Auto Prototype</title>
+  <style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101827}iframe{display:block;position:fixed;inset:0;width:100%;height:100%;border:0}</style>
+</head>
+<body>
+  <iframe id="game" title="GTA VII România — cursă și service auto"></iframe>
+<script>
+(async () => {
+  'use strict';
+  const frame = document.getElementById('game');
+  try {
+    const response = await fetch('vehicles.html', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Nu s-a putut încărca vehicles.html.');
+    let html = await response.text();
+    const markerAnchor = '// Direction indicator is repositioned and aimed at the active checkpoint every frame.';
+    const markerPatch = `
+// Service Auto: pay $500 to repair the sedan and clear the wanted level.
+const garageMarker=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.42,32),new THREE.MeshStandardMaterial({color:0x38bdf8,emissive:0x087bb5,emissiveIntensity:1.6,transparent:true,opacity:.9}));
+garageMarker.position.set(120,.32,180);scene.add(garageMarker);
+const garageLabel=makeTextSprite('SERVICE AUTO - $500','#a8e7ff');garageLabel.position.set(120,6,180);scene.add(garageLabel);
+let garageCooldown=0;
+`;
+    const updateAnchor = '// Start marker interaction, race timer and ordered checkpoint detection.';
+    const serviceUpdate = `
+ // Service interaction runs alongside the existing race and police simulation.
+ garageMarker.rotation.y+=.018;
+ garageMarker.material.emissiveIntensity=1.1+Math.sin(tick*.09)*.65;
+ garageLabel.position.y=5.8+Math.sin(tick*.07)*.28;
+ if(garageCooldown>0)garageCooldown--;
+ if(Math.hypot(player.x-120,player.z-180)<8&&garageCooldown===0){
+   const needsService=player.health<100||wanted>0;
+   if(!needsService){toast('Mașina este în stare bună.');garageCooldown=150;}
+   else if(cash>=500){
+     cash-=500;player.health=100;wanted=0;wantedTimer=0;syncPolice();renderStars();
+     $('cash').textContent='$'+cash.toLocaleString('en-US');
+     tone(659.25,.16,'sine',.055,880);tone(880,.2,'sine',.05,1046.5,.14);
+     toast('🔧 SERVICE AUTO: reparație completă și nivel Wanted șters (-$500).');garageCooldown=240;
+   }else{toast('Ai nevoie de cel puțin $500 pentru Service Auto.');garageCooldown=180;}
+ }
+`;
+    if (!html.includes(markerAnchor) || !html.includes(updateAnchor)) {
+      throw new Error('Structura jocului s-a schimbat; patch-ul Service Auto nu a fost aplicat.');
+    }
+    html = html.replace(markerAnchor, markerPatch + '\n' + markerAnchor);
+    html = html.replace(updateAnchor, serviceUpdate + '\n' + updateAnchor);
+    frame.srcdoc = html;
+  } catch (error) {
+    document.body.innerHTML = '<main style="font:16px system-ui;color:white;background:#101827;padding:24px">' +
+      '<h2>Nu s-a putut porni prototipul Service Auto</h2><p>' + String(error.message) +
+      '</p><p>Rulează proiectul cu un server web, de exemplu <code>python -m http.server 8080</code>.</p></main>';
+  }
+})();
+</script>
+</body>
+</html>
