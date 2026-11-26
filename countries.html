@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#101827">
+<title>GTA VII România — Multi-Country Expansion</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101827}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;display:block}</style>
+</head>
+<body>
+<iframe id="game" title="GTA VII România — hartă multi-țară"></iframe>
+<script>
+(async()=>{
+  'use strict';
+  const frame=document.getElementById('game');
+  const fail=message=>{document.body.innerHTML='<main style="font:16px system-ui;color:white;background:#101827;padding:24px"><h2>Nu s-a putut încărca extensia hărții</h2><p></p></main>';document.querySelector('main p').textContent=message;};
+  try{
+    const response=await fetch('index.html',{cache:'no-store'});
+    if(!response.ok)throw new Error('Nu s-a putut încărca index.html: '+response.status);
+    let html=await response.text();
+    const worldAnchor='const HALF_WORLD = 360; // Lume de 720x720 unități 3D';
+    if(!html.includes(worldAnchor))throw new Error('Versiunea jocului nu conține ancora așteptată pentru extinderea hărții.');
+    html=html.replace(worldAnchor,'const HALF_WORLD = 1450; // Hartă extinsă pe trei țări');
+    html=html.replace('new THREE.PlaneGeometry(HALF_WORLD * 2.4, HALF_WORLD * 2.4)','new THREE.PlaneGeometry(HALF_WORLD * 2.4, HALF_WORLD * 2.4)');
+    const style=`<style>
+      #countryHud{position:fixed;z-index:24;top:12px;left:50%;transform:translateX(-50%);padding:7px 13px;border:1px solid #ffffff50;border-radius:20px;background:#07101bdc;color:#fff;font:900 11px system-ui;letter-spacing:.08em;text-shadow:0 2px #000;pointer-events:none;box-shadow:0 4px 16px #0008}
+      #countryHud span{color:#ffd447}
+      @media(max-width:600px){#countryHud{top:8px;font-size:9px;padding:6px 9px}}
+    </style>`;
+    html=html.replace('</head>',style+'</head>');
+    const scriptAnchor='            function addTree(x, z) {';
+    const countryCode=`
+            // Multi-country extension: fictionalized regions connected along the eastbound highway.
+            const countryHud=document.createElement('div');countryHud.id='countryHud';countryHud.innerHTML='REGIUNE: <span>ROMÂNIA</span>';document.body.appendChild(countryHud);
+            let currentCountry='România';
+            function countryLabel(text){const c=document.createElement('canvas');c.width=512;c.height=100;const ctx=c.getContext('2d');ctx.fillStyle='rgba(6,14,24,.92)';ctx.beginPath();ctx.roundRect(5,8,502,84,18);ctx.fill();ctx.lineWidth=5;ctx.strokeStyle='#e2e8f0';ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 34px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,50);const tex=new THREE.CanvasTexture(c);const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sprite.scale.set(23,4.5,1);return sprite;}
+            function countryBox(w,h,d,color,x,y,z){const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color,roughness:.88}));mesh.position.set(x,y,z);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);return mesh;}
+            function buildCountryExpansion(){
+              // Long eastbound road, continuous across the border bridges.
+              const roadMat=new THREE.MeshStandardMaterial({color:0x202830,roughness:.94});const lineMat=new THREE.MeshBasicMaterial({color:0xf8fafc});
+              const highway=new THREE.Mesh(new THREE.PlaneGeometry(2220,30),roadMat);highway.rotation.x=-Math.PI/2;highway.position.set(550,.035,0);highway.receiveShadow=true;scene.add(highway);
+              for(let x=-520;x<1650;x+=22){const dash=new THREE.Mesh(new THREE.PlaneGeometry(8,.35),lineMat);dash.rotation.x=-Math.PI/2;dash.position.set(x,.06,0);scene.add(dash);}
+              // Distinct ground palettes and raised landscape silhouettes for each country.
+              const regions=[{name:'BULGARIA',x:660,w:460,color:0x9a8b67,hill:0xb8a477},{name:'UNGARIA • EUROPA CENTRALĂ',x:1195,w:470,color:0x637b69,hill:0x758a74}];
+              regions.forEach((r,ri)=>{const land=new THREE.Mesh(new THREE.PlaneGeometry(r.w,800),new THREE.MeshStandardMaterial({color:r.color,roughness:1}));land.rotation.x=-Math.PI/2;land.position.set(r.x,-.075,0);scene.add(land);
+                for(let i=0;i<8;i++){const hx=r.x-r.w*.44+i*(r.w*.88/7),hz=(i%2?1:-1)*(125+(i%3)*36),radius=34+(i%3)*16;const hill=new THREE.Mesh(new THREE.SphereGeometry(radius,12,8),new THREE.MeshStandardMaterial({color:r.hill,roughness:1}));hill.scale.set(1,.24,1.8);hill.position.set(hx,radius*.18,hz);scene.add(hill);}
+                const label=countryLabel(r.name);label.position.set(r.x,15,-58);scene.add(label);
+                if(ri===0){ // Bulgarian coastal road and sun-washed low-rise blocks
+                  for(let i=0;i<10;i++){const x=r.x-r.w*.42+i*39,z=(i%2?1:-1)*56,h=10+(i%3)*3;countryBox(20,h,18,[0xd6c49c,0xe4d2aa,0xc3b28e][i%3],x,h/2,z);}
+                  const coast=new THREE.Mesh(new THREE.PlaneGeometry(r.w,190),new THREE.MeshStandardMaterial({color:0x287da1,roughness:.35,metalness:.1}));coast.rotation.x=-Math.PI/2;coast.position.set(r.x,-.03,-310);scene.add(coast);
+                  const beach=new THREE.Mesh(new THREE.PlaneGeometry(r.w,48),new THREE.MeshStandardMaterial({color:0xd9c38b,roughness:1}));beach.rotation.x=-Math.PI/2;beach.position.set(r.x,-.02,-205);scene.add(beach);
+                }else{ // Central European industrial yards and a gothic-inspired skyline silhouette
+                  for(let i=0;i<7;i++){const x=r.x-r.w*.38+i*48,z=(i%2?1:-1)*72,h=28+(i%4)*10;countryBox(34,h,30,[0x707b7e,0x59666c,0x8c8173][i%3],x,h/2,z);}
+                  for(let i=0;i<3;i++){const x=r.x+100+i*36;countryBox(9,65,9,0x515b65,x,32.5,-120);const spire=new THREE.Mesh(new THREE.ConeGeometry(6,22,6),new THREE.MeshStandardMaterial({color:0x414d57}));spire.position.set(x,76,-120);scene.add(spire);}
+                }
+              });
+              // Two border bridges with railings and small checkpoint booths.
+              [430,955].forEach((x,index)=>{const bridge=new THREE.Mesh(new THREE.BoxGeometry(130,.4,32),new THREE.MeshStandardMaterial({color:0x59636b,roughness:.8}));bridge.position.set(x,.22,0);bridge.receiveShadow=true;scene.add(bridge);
+                [-15,15].forEach(z=>countryBox(130,1.5,.7,0xb7c1c8,x,1.35,z));
+                for(let n=-48;n<=48;n+=24){countryBox(2,2,1.2,0xf4f1e7,x+n,1.45,-10);countryBox(2,2,1.2,0xce1126,x+n,1.45,-10);}
+                countryBox(10,5,8,0xd7d1bd,x-22,2.7,30);countryBox(4,4,1,0x26384b,x-22,5.5,25.8);
+                const border=countryLabel(index===0?'FRONTIERĂ ROMÂNIA — BULGARIA':'FRONTIERĂ BULGARIA — UNGARIA');border.scale.set(29,5.6,1);border.position.set(x,12,-24);scene.add(border);
+                const barrier=countryBox(.8,5,.8,0xf1f5f9,x+5,2.5,0);barrier.rotation.z=-.42;
+              });
+              // Direction signs visible from the main road, with readable multilingual destinations.
+              [{x:300,text:'BULGARIA →'},{x:820,text:'UNGARIA / EUROPA CENTRALĂ →'}].forEach(s=>{countryBox(.7,8,.7,0x58616b,s.x,4,-22);countryBox(20,5,1,0x14532d,s.x+8,8,-22);const sign=countryLabel(s.text);sign.scale.set(23,4.5,1);sign.position.set(s.x+8,9,-20.8);scene.add(sign);});
+              // Small Romanian rural village scenery west of the first bridge.
+              for(let i=0;i<8;i++){const x=260+i*17,z=(i%2?1:-1)*95,h=7+(i%3);countryBox(13,h,12,i%2?0xa78a65:0xc2a77e,x,h/2,z);const roof=new THREE.Mesh(new THREE.ConeGeometry(10,5,4),new THREE.MeshStandardMaterial({color:0x713b2c}));roof.position.set(x,h+2,z);roof.rotation.y=Math.PI/4;scene.add(roof);}
+            }
+            function updateCountry(){const x=playerState.x;const next=x<430?'România':x<955?'Bulgaria':'Ungaria / Europa Centrală';if(next!==currentCountry){currentCountry=next;const span=countryHud.querySelector('span');span.textContent=next.toUpperCase();showToast('🌍 Ai trecut frontiera: '+next,'#38bdf8');} }
+`;
+    if(!html.includes(scriptAnchor))throw new Error('Nu s-a găsit punctul de inserare pentru mediul multi-country.');
+    html=html.replace(scriptAnchor,countryCode+'\n'+scriptAnchor);
+    const buildAnchor='            buildWorld3D();\n            populateEntities3D();';
+    if(!html.includes(buildAnchor))throw new Error('Nu s-a găsit inițializarea lumii 3D.');
+    html=html.replace(buildAnchor,'            buildWorld3D();\n            buildCountryExpansion();\n            populateEntities3D();');
+    const tickAnchor='                updateHUD();\n            }\n\n            function startMission3D(m)';
+    if(!html.includes(tickAnchor))throw new Error('Nu s-a găsit bucla jocului pentru detectarea frontierelor.');
+    html=html.replace(tickAnchor,'                updateCountry();\n                updateHUD();\n            }\n\n            function startMission3D(m)');
+    frame.srcdoc=html;
+  }catch(error){fail(String(error.message||error));}
+})();
+</script>
+</body>
+</html>

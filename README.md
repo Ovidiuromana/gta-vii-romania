@@ -1,23 +1,16 @@
 # GTA VII România — 4D Edition
 
-A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired city includes walkable streets, driveable cars, police pursuits, missions and mobile controls.
+A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired setting includes driveable cars, police pursuits, missions and mobile controls.
 
 > **Unofficial fan prototype.** Not affiliated with or endorsed by Rockstar Games. “4D Edition” is a title; the game renders a 3D scene.
 
 ## Play
 
 - Main game: `index.html`.
-- Race + radio edition: `race-radio.html` layers the timed 6-checkpoint street race and three synthesized radio stations over the main game without replacing its existing visuals, simulation or touch controls. Start the race by driving into the glowing green marker near the starting cars. Finish in 45 seconds for **+2,500 RON**.
-- Other demos: `vehicles.html`, `immersion.html`, `radio.html` and `service.html`.
+- Multi-country expansion: `countries.html` extends the main Three.js world eastward with three fictionalized regions, connecting bridges, border checkpoints, direction signs and distinct scenery. Drive east from the Romanian city along the extended highway to cross into Bulgaria, then continue to Hungary / Central Europe.
+- Race + radio edition: `race-radio.html` adds the timed street race and synthesized radio.
+- Vehicle / police demo: `vehicles.html`; cinematic effects: `immersion.html`; radio wrapper: `radio.html`; service demo: `service.html`.
 
-Run from the repository directory with `python -m http.server 8080`, then open `http://localhost:8080/race-radio.html`. The race edition fetches `index.html`, so use a local web server rather than opening the file directly. Three.js is loaded from cdnjs and needs an internet connection.
+Run from the repository directory using `python -m http.server 8080`, then open `http://localhost:8080/countries.html`. The multi-country page fetches `index.html`; use a local HTTP server rather than opening the page directly. Three.js is loaded from cdnjs.
 
-## Features
-
-- Original Three.js city scene, third-person gameplay and mobile controls
-- Glowing race-start marker; 45-second race with six sequential 3D checkpoints and a floating direction arrow
-- +2,500 RON reward, HUD countdown and celebratory success banner/sound
-- Radio cycle: RADIO OFF, HORĂ MOLDOVENEASCĂ FM, TRAP ROMÂNIA FM
-- Synthesized Web Audio folk-inspired melody and trap-style bass rhythm; no MP3 assets
-
-All locations and music are fictional prototypes. This is not a production-scale AAA game.
+The country environments are original, simplified prototypes—not real-world maps or exact replicas of existing cities.
