@@ -1,47 +1,39 @@
 # GTA VII România — 4D Edition
 
-A browser-based, mobile-friendly **3D open-world game prototype** built with HTML, Three.js and the Web Audio API. The project creates a fictional Romanian-inspired city with walkable streets, driveable cars, a minimap, mission markers, a procedural radio soundtrack and local save data.
+A mobile-friendly 3D open-world browser prototype built with HTML, Three.js and the Web Audio API. The fictional Romanian-inspired city includes walkable streets, driveable cars, a minimap, mission markers, synthesized radio motifs and local saves.
 
-> **Fan prototype:** This is an unofficial independent project and is not affiliated with, endorsed by, or connected to Rockstar Games. “4D Edition” is a title only; the prototype renders a 3D scene.
+> **Unofficial fan prototype.** Not affiliated with or endorsed by Rockstar Games. “4D Edition” is a title; the game renders a 3D scene.
 
 ## Play
 
-Open `index.html` in a modern browser with WebGL enabled and an internet connection (Three.js is loaded from CDN). For a quick local server:
+- Main prototype: open `index.html` in a modern WebGL-enabled browser.
+- Atmosphere preview: open `immersion.html` for a cinematic accelerated day/night color grade, night ambience, headlights overlay and motion effects. It embeds the main prototype.
+- Three.js is loaded from cdnjs, so an internet connection is required. You can run a local server with `python -m http.server 8000`, then visit `http://localhost:8000`.
 
-```bash
-python -m http.server 8000
-```
+## Prototype features
 
-Then visit `http://localhost:8000`.
-
-## Features
-
-- Procedural 3D city blocks, roads, a central roundabout and Romanian tricolor landmark
-- Third-person on-foot movement, sprinting, jumping and camera orbit
+- Procedural city blocks, roads, central roundabout and Romanian tricolor landmark
+- Third-person on-foot movement, sprint, jump and camera orbit
 - Driveable parked cars and simple ambient traffic
-- Missions with destinations, countdowns and RON rewards
-- Gas station, vehicle repair point and minimap
-- Mobile virtual joystick and touch controls; keyboard and mouse controls on desktop
-- Original synthesized radio motifs via Web Audio API (no commercial music assets)
-- Local progress saving with `localStorage`
+- Timed destination missions with RON rewards
+- Gas station, repair point, minimap and mobile touch controls
+- Keyboard/mouse support, synthesized radio motifs and local `localStorage` saves
 - Responsive HUD and WebGL fallback messaging
+
+## Immersion preview
+
+`immersion.html` adds an accelerated cinematic day/night cycle, sunset/night color grading, simulated street-lamp glow and headlight bloom, plus lightweight camera movement and speed-line effects while acceleration controls are held. These are presentation-layer effects over the prototype, not physically simulated lighting or vehicle telemetry. Respect for reduced-motion preferences disables the motion effects.
 
 ## Controls
 
 | Action | Desktop | Mobile |
 |---|---|---|
 | Move / steer | WASD or arrow keys | Left virtual joystick |
-| Enter / exit a car | F or E | INTRĂ / IEȘI button |
-| Jump / nitro | Space | SALT / NITRO button |
-| Sprint | Shift | Hold the action button while walking |
+| Enter / exit car | F or E | INTRĂ / IEȘI |
+| Jump / nitro | Space | SALT / NITRO |
+| Sprint | Shift | Hold action while on foot |
 | Rotate camera | Q or drag | Drag the 3D scene |
-| Radio | R | RADIO button |
-| Pause | Esc or M | Pause button |
-| Accelerate / reverse | W / S | GAZ / ÎNAPOI buttons |
+| Radio / pause | R / Esc or M | HUD buttons |
+| Accelerate / reverse | W / S | GAZ / ÎNAPOI |
 
-## Notes
-
-- The city and its locations are fictional and inspired by Romanian settings; this is not a real-world map.
-- Browser storage is device-local and can be cleared by browser settings.
-- Graphics and traffic are intentionally lightweight so the prototype can run on mobile hardware. It is not a production-scale AAA game.
-- External dependency: Three.js r128 from cdnjs.
+The city is fictional and inspired by Romanian settings; it is not a real-world map. Graphics, traffic, and effects are lightweight prototype features, not a production-scale AAA simulation.
